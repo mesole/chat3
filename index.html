@@ -1,0 +1,166 @@
+<html ng-app="ionicApp">
+
+<head>
+  <meta charset="utf-8">
+  <!-- <meta http-equiv="Access-Control-Allow-Origin" content="*" /> -->
+
+  <!-- <meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' *; connect-src http://106.55.224.146:8081/chatgpt"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ChatGPT</title>
+
+  <link href="https://cdn.staticfile.org/ionic/1.3.2/css/ionic.css" rel="stylesheet">
+  <script src="https://cdn.staticfile.org/ionic/1.3.2/js/ionic.bundle.min.js"></script>
+  <script>
+    angular.module('ionicApp', ['ionic'])
+
+      .controller('MyCtrl', function ($http, $scope, $timeout, $ionicPopup) {
+
+        // ob = JSON.parse(localStorage.getItem("chatinfo"))
+        // if ( ob ) {
+        //   $scope.items = ob
+        // }
+        localStorage.setItem("chatinfo", JSON.stringify([]));
+
+        $scope.show = function (u) {
+
+
+          if (!u || u.firstName.length<1 ) {
+            var myPopup = $ionicPopup.show({
+              title: '提示',
+              subTitle: '<h4>请输入问题！</h4>',
+              scope: $scope,
+              buttons: [
+                {
+                  text: '<b>确定</b>',
+                  type: 'button-positive',
+                },
+              ]
+            });
+            myPopup.then(function (res) {
+              myPopup.close();
+            });
+            $timeout(function () {
+              myPopup.close();
+            }, 3000);
+            return
+          }
+          $scope.showDiv = !$scope.showDiv;
+
+          let data = {
+            prompt: u.firstName
+          };
+          // let data2 = {
+          //   model: "text-davinci-003",
+          //   max_tokens:4000,
+          //   top_p:1,
+          //   temperature:1,
+          //   prompt: u.firstName
+          // };
+
+          ob = JSON.parse(localStorage.getItem("chatinfo"))
+          if (!ob) {
+            ob = []
+          }
+          ob.push(u.firstName)
+          $scope.items = ob
+          localStorage.setItem("chatinfo", JSON.stringify(ob));
+
+          $scope.newUser.firstName = null
+          // $http.post('http://106.55.224.146:8081/chatgpt', data)
+          $http.post('https://api.openai.com/v1/completions', data, {
+    headers: { Authorization: `Bearer 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` }
+})
+            .then(response => {
+              $scope.showDiv = false;
+
+              ob = JSON.parse(localStorage.getItem("chatinfo"))
+              if (!ob) {
+                ob = []
+              }
+              ob.push(response.data.data)
+              $scope.items = ob
+              localStorage.setItem("chatinfo", JSON.stringify(ob));
+            })
+            .catch(error => {
+              $scope.showDiv = false;
+              ob = JSON.parse(localStorage.getItem("chatinfo"))
+              if (!ob) {
+                ob = []
+              }
+              ob.push("未知异常")
+              $scope.items = ob
+              localStorage.setItem("chatinfo", JSON.stringify(ob));
+            });
+
+        }
+
+
+
+
+      });
+  </script>
+  <style>
+    body {
+      cursor: url('http://www.runoob.com/try/demo_source/finger.png'), auto;
+    }
+
+    .spinner svg {
+      width: 19% !important;
+      height: 85px !important;
+    }
+  </style>
+</head>
+
+<body ng-controller="MyCtrl">
+
+  <ion-header-bar class="bar bar-header bar-positive">
+
+    <h1 class="title">ChatGPT 2</h1>
+
+  </ion-header-bar>
+
+
+  <ion-content style="margin-bottom: 15px;">
+
+    <div class="list" style="margin-bottom: 0px;" ng-repeat="value in items">
+
+      <a class="item item-avatar" href="#">
+        <img ng-if="$index%2==0" src="https://img2.baidu.com/it/u=3528101378,1428871256&fm=253&fmt=auto&app=120&f=JPEG?w=161&h=161">
+        <img ng-if="$index%2!=0" src="https://www.cveoy.com/img/mask-icon.svg">
+        <h2 ng-if="$index%2==0" style="font-weight: bold;">我</h2>
+        <h2 ng-if="$index%2!=0" style="font-weight: bold;">ChatGPT</h2>
+        <p style="white-space: pre-line;">{{ value }}</p>
+      </a>
+
+
+    </div>
+
+  
+  </ion-content>
+
+  <p ng-show="showDiv" draggable="false"
+      style="position: absolute;top: 0px;left: 0px;z-index: 9999;text-align: center;width: 100%;height: 100%;padding-top: 300px;">
+      <ion-spinner icon="lines" class="spinner-calm"></ion-spinner>
+    </p>
+
+
+
+  <ion-footer-bar style="height: 60px;">
+
+    <div style="width:100%;height:100%;overflow: hidden;display: flex;">
+      <div style="width: 80%;height: 60px;position: relative;">
+        <input ng-model="newUser.firstName"
+          style="position: absolute;left: 0px;top: 0px;width: 98%;height: 48px;border:0.7px solid #dddddd" type="text">
+      </div>
+      <div style="width: 20%;height: 60px;position: relative;">
+        <button class="button button-small button-positive" style="height:48px;width:100%;"
+          ng-click="show(newUser)">发送</button>
+      </div>
+    </div>
+
+  </ion-footer-bar>
+
+
+</body>
+
+</html>
